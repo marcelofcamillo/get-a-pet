@@ -1,6 +1,13 @@
 import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
+import dotenv from 'dotenv';
 import User from '../models/User.js';
+
+dotenv.config();
+
+// helpers
 import createUserToken from '../helpers/create-user-token.js';
+import getToken from '../helpers/get-token.js';
 
 class UserController {
   static async register(req, res) {
@@ -104,9 +111,12 @@ class UserController {
   static async checkUser(req, res) {
     let currentUser;
 
-    console.log(req.headers.authorization);
-
     if (req.headers.authorization) {
+      const token = getToken(req);
+      const decoded = jwt.verify(token, process.env.SECRET);
+
+      currentUser = await User.findById(decoded.id);
+      currentUser.password = undefined;
     } else {
       currentUser = null;
     }
