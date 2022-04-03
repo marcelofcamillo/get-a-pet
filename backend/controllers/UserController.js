@@ -8,34 +8,34 @@ class UserController {
 
     // validations
     if (!name) {
-      res.status(402).json({ message: 'O nome é obrigatório!' });
+      res.status(422).json({ message: 'O nome é obrigatório!' });
       return;
     }
 
     if (!email) {
-      res.status(402).json({ message: 'O e-mail é obrigatório!' });
+      res.status(422).json({ message: 'O e-mail é obrigatório!' });
       return;
     }
 
     if (!phone) {
-      res.status(402).json({ message: 'O telefone é obrigatório!' });
+      res.status(422).json({ message: 'O telefone é obrigatório!' });
       return;
     }
 
     if (!password) {
-      res.status(402).json({ message: 'A senha é obrigatória!' });
+      res.status(422).json({ message: 'A senha é obrigatória!' });
       return;
     }
 
     if (!confirmPassword) {
       res
-        .status(402)
+        .status(422)
         .json({ message: 'A confirmação de senha é obrigatória!' });
       return;
     }
 
     if (password !== confirmPassword) {
-      res.status(402).json({ message: 'As senhas não conferem!' });
+      res.status(422).json({ message: 'As senhas não conferem!' });
       return;
     }
 
@@ -43,7 +43,7 @@ class UserController {
     const userExists = await User.findOne({ email: email });
 
     if (userExists) {
-      res.status(402).json({ message: 'E-mail já cadastrado!' });
+      res.status(422).json({ message: 'E-mail já cadastrado!' });
       return;
     }
 
@@ -66,6 +66,39 @@ class UserController {
     } catch (error) {
       res.status(500).json({ message: error });
     }
+  }
+
+  static async login(req, res) {
+    const { email, password } = req.body;
+
+    // validations
+    if (!email) {
+      res.status(422).json({ message: 'O e-mail é obrigatório!' });
+      return;
+    }
+
+    if (!password) {
+      res.status(422).json({ message: 'A senha é obrigatória!' });
+      return;
+    }
+
+    // check if user exists
+    const user = await User.findOne({ email: email });
+
+    if (!user) {
+      res.status(422).json({ message: 'Usuário não cadastrado!' });
+      return;
+    }
+
+    // check if passord match with db password
+    const checkPassord = await bcrypt.compare(password, user.password);
+
+    if (!checkPassord) {
+      res.status(422).json({ message: 'Senha inválida!' });
+      return;
+    }
+
+    await createUserToken(user, req, res);
   }
 }
 
