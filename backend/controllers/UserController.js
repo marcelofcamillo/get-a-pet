@@ -2,7 +2,48 @@ import User from '../models/User.js';
 
 class UserController {
   static async register(req, res) {
-    res.json('Olá, Get a Pet!');
+    const { name, email, phone, password, confirmPassword } = req.body;
+
+    // validations
+    if (!name) {
+      res.status(402).json({ message: 'O nome é obrigatório!' });
+      return;
+    }
+
+    if (!email) {
+      res.status(402).json({ message: 'O e-mail é obrigatório!' });
+      return;
+    }
+
+    if (!phone) {
+      res.status(402).json({ message: 'O telefone é obrigatório!' });
+      return;
+    }
+
+    if (!password) {
+      res.status(402).json({ message: 'A senha é obrigatória!' });
+      return;
+    }
+
+    if (!confirmPassword) {
+      res
+        .status(402)
+        .json({ message: 'A confirmação de senha é obrigatória!' });
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      res.status(402).json({ message: 'As senhas não conferem!' });
+      return;
+    }
+
+    // check if user exists
+    const userExists = await User.findOne({ email: email });
+
+    if (userExists) {
+      res.status(402).json({ message: 'E-mail já cadastrado!' });
+      return;
+    }
   }
 }
 
