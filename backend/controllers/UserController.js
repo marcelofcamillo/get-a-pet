@@ -1,3 +1,4 @@
+import bcrypt from 'bcrypt';
 import User from '../models/User.js';
 
 class UserController {
@@ -43,6 +44,26 @@ class UserController {
     if (userExists) {
       res.status(402).json({ message: 'E-mail já cadastrado!' });
       return;
+    }
+
+    // create a password
+    const salt = await bcrypt.genSalt(12);
+    const passwordHash = await bcrypt.hash(password, salt);
+
+    // create user
+    const user = new User({
+      name,
+      email,
+      phone,
+      password: passwordHash,
+    });
+
+    try {
+      const newUser = await user.save();
+
+      res.status(201).json({ message: 'Usuário criado com sucesso!', newUser });
+    } catch (error) {
+      res.status(500).json({ message: error });
     }
   }
 }
