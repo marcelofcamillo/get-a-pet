@@ -8,6 +8,7 @@ dotenv.config();
 // helpers
 import createUserToken from '../helpers/create-user-token.js';
 import getToken from '../helpers/get-token.js';
+import getUserByToken from '../helpers/get-user-by-token.js';
 
 class UserController {
   static async register(req, res) {
@@ -138,7 +139,68 @@ class UserController {
   }
 
   static async editUser(req, res) {
-    res.status(200).json({ message: 'Ok!' });
+    const id = req.params.id;
+    const { name, email, phone, password, confirmPassword } = req.body;
+    let image = '';
+
+    // check if user exists
+    const token = getToken(req);
+    const user = await getUserByToken(token);
+
+    // validations
+    if (!name) {
+      res.status(422).json({ message: 'O nome é obrigatório!' });
+      return;
+    }
+
+    user.name = name;
+
+    if (!email) {
+      res.status(422).json({ message: 'O e-mail é obrigatório!' });
+      return;
+    }
+
+    // check if email has already taken
+    const userExists = await User.findOne({ email: email });
+
+    if (user.email !== email && userExists) {
+      res.status(422).json({ message: 'E-mail já está sendo utilizado!' });
+      return;
+    }
+
+    user.email = email;
+
+    if (!phone) {
+      res.status(422).json({ message: 'O telefone é obrigatório!' });
+      return;
+    }
+
+    user.phone = phone;
+
+    if (password !== confirmPassword) {
+      res.status(422).json({ message: 'As senhas não conferem!' });
+      return;
+    } else if (password === confirmPassword && password !== null) {
+      // creating password
+      const salt = await bcrypt.genSalt(12);
+      const passwordHash = await bcrypt.hash(password, salt);
+
+      user.password = passwordHash;
+    }
+
+    try {
+      // returns user updated data
+      await User.findOneAndUpdate(
+        { _id: user._id },
+        { $set: user },
+        { new: true }
+      );
+
+      res.status(200).json({ message: 'Dados alterados com sucesso!' });
+    } catch (error) {
+      res.status(500).json({ message: error });
+      return;
+    }
   }
 }
 
