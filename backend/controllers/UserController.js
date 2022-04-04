@@ -147,6 +147,10 @@ class UserController {
     const token = getToken(req);
     const user = await getUserByToken(token);
 
+    if (req.file) {
+      user.image = req.file.filename;
+    }
+
     // validations
     if (!name) {
       res.status(422).json({ message: 'O nome é obrigatório!' });
