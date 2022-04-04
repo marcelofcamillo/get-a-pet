@@ -3,6 +3,8 @@ import Pet from '../models/Pet.js';
 // helpers
 import getToken from '../helpers/get-token.js';
 import getUserByToken from '../helpers/get-user-by-token.js';
+//const ObjectId = require('mongoose').Types.ObjectId;
+import ObjectId from 'mongoose';
 
 class PetController {
   // create a pet
@@ -96,6 +98,25 @@ class PetController {
     const pets = await Pet.find({ 'adopter._id': user._id }).sort('-createdAt');
 
     res.status(200).json({ pets });
+  }
+
+  static async getPetById(req, res) {
+    const id = req.params.id;
+
+    if (!ObjectId.isValidObjectId(id)) {
+      res.status(422).json({ message: 'ID inválido!' });
+      return;
+    }
+
+    // check if pet exists
+    const pet = await Pet.findOne({ _id: id });
+
+    if (!pet) {
+      res.status(404).json({ message: 'Pet não encontrado!' });
+      return;
+    }
+
+    res.status(200).json({ pet });
   }
 }
 
